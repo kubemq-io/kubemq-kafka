@@ -33,6 +33,7 @@ to a `connectors/kafka/*_test.go` canonical test.
 | Topic identity by UUID | KIP-516, `Metadata` v13 | `Fetch` is name-based at v12. |
 | Admin — topics | `CreateTopics`/`DeleteTopics`/`DescribeConfigs`/`DescribeCluster` (keys 19/20/32/60) | Auto-create on `Metadata`/`Produce`. |
 | Security — SASL | `SASL/PLAIN`, `SASL/SCRAM-SHA-256`, `SASL/SCRAM-SHA-512` | See [../guides/security-sasl-tls.md](../guides/security-sasl-tls.md). |
+| Security — OAUTHBEARER | OIDC-federated `SASL/OAUTHBEARER` (M4) | **SASL_SSL / OIDC only** — advertised/accepted on the TLS listener only; refused on plaintext with `UNSUPPORTED_SASL_MECHANISM(33)`. See [../guides/security-sasl-tls.md](../guides/security-sasl-tls.md). |
 | Security — mTLS | principal = CN of the verified chain | |
 | Authorization | Kafka ACL enforcement → Casbin | Enforcement is full (management is Partial — below). |
 | Retention | `retention.ms` / `retention.bytes` | → channel `MaxAge` / `MaxBytes` / `MaxMsgs`. |
@@ -82,21 +83,32 @@ InitProducerId → AddPartitionsToTxn → transactional Produce → EndTxn(commi
 > WP-9.4 exit gate (deferred). **Every EOS doc, example, and burn-in worker must cite this ceiling.**
 > See [../concepts/transactions-eos.md](../concepts/transactions-eos.md).
 
+## ✅ Supported on `next` (the compaction-dependent ecosystem)
+
+The Kafka connector runs **only on the `next` engine**, and `next` ships log compaction
+(`cleanup.policy=compact`, tombstones, latest-value-per-key) on Kafka topic channels as a GA
+capability. Because the compacted internal topics these depend on are available, the following are
+**supported**, not non-goals:
+
+| Supported on `next` | Note |
+|---|---|
+| **Log compaction** (`cleanup.policy=compact`) | **GA on `next`** — latest-value-per-key log rewrite with tombstones on Kafka topic channels, round-tripped via `CreateTopics`/`IncrementalAlterConfigs`. |
+| **Kafka Connect** | Relies on compacted internal topics, which `next` provides. |
+| **Kafka Streams** | Relies on compacted internal topics, which `next` provides. |
+| **Schema-Registry _wire_ interop** | The 5-byte magic-byte value prefix passes through; the payload is opaque to the broker. |
+
 ## ⛔ Never — architectural non-goals
 
-These are gated by the absence of log compaction, or are otherwise out of the connector's charter.
-They are never used as working examples.
+These are out of the connector's charter regardless of engine — they are **not** gated by
+compaction (which `next` provides). They are never used as working examples.
 
 | Non-goal | Note |
 |---|---|
-| **Log compaction** | The gate for everything below it. |
-| **Kafka Streams** | Requires compaction. |
-| **Kafka Connect** | Requires compaction. |
-| **Schema-Registry _service_** | The **service** is a non-goal — but Schema-Registry **wire** interop (the 5-byte magic prefix) works. |
-| **ksqlDB** | Requires compaction. |
-| **MirrorMaker 2** | — |
-| **Confluent Control Center / Cruise Control** | — |
-| **GSSAPI / Kerberos SASL** | SASL/PLAIN and SASL/SCRAM are the supported mechanisms. |
+| **Schema-Registry _service_** | The hosted REST API + `_schemas`-topic-backed server is a non-goal — but Schema-Registry **wire** interop (the 5-byte magic prefix) works. |
+| **ksqlDB** | A separate stream-processing runtime KubeMQ does not host as an embedded engine. |
+| **MirrorMaker 2** | Cross-cluster mirroring is not offered as a hosted tool; migration is start-fresh by design. |
+| **Confluent Control Center / Cruise Control** | Depend on proprietary broker-side metrics-reporter plugins. |
+| **GSSAPI / Kerberos SASL** | No KDC integration; SASL/PLAIN and SASL/SCRAM are the supported mechanisms. |
 
 ## 🔴 Not-yet — deferred
 
@@ -104,7 +116,6 @@ They are never used as working examples.
 |---|---|
 | **KIP-848 next-gen consumer groups** | Classic protocol only today. |
 | **Static membership** | — |
-| **OAUTHBEARER** | — |
 | **Delegation tokens** | — |
 | **Share groups (KIP-932)** | — |
 | **Txn-admin RPCs** | `WriteTxnMarkers`(27) / `DescribeProducers`(61) / `DescribeTransactions`(65) / `ListTransactions`(66) — **no CLI `--abort`**. A wedged transaction is bounded by the `transaction.timeout.ms` reaper. |

@@ -20,6 +20,13 @@ state of the docs and examples in this repo, not a client library release.
   example manifests, leaving **13 variants × 7 languages**. See
   [`docs/concepts/interop-with-native.md`](docs/concepts/interop-with-native.md) for the reservation.
 
+### Fixed
+
+- Docs: corrected the Kafka scope matrix to match the server source of truth (`docs/24-kafka.md`) —
+  log compaction (GA on `next`), Kafka Connect/Streams (supported, they rely on compacted internal
+  topics), and OAUTHBEARER (✅ SUPPORTED, SASL_SSL / OIDC only) were mis-marked as ⛔/🔴; added the
+  `next`-engine requirement (DE-57).
+
 ## [1.0.0] - 2026-07-13
 
 ### Added

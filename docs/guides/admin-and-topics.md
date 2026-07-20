@@ -77,10 +77,11 @@ shape as retention-driven trimming, just explicitly requested.
 
 ## What is not here
 
-- **⛔ Log compaction** is a non-goal, and everything gated by it — Kafka Streams, Connect, the
-  Schema-Registry **service**, ksqlDB — is out of scope. (Schema-Registry **wire** interop, the
-  5-byte magic prefix, still works.) MirrorMaker 2, Confluent Control Center, and Cruise Control are
-  non-goals.
+- **✅ Log compaction** (`cleanup.policy=compact`) is **GA on the `next` engine** — the only engine
+  Kafka runs on — so the compaction-dependent ecosystem, **Kafka Streams** and **Kafka Connect**, is
+  **supported**. The genuine non-goals are the Schema-Registry **service** and ksqlDB
+  (Schema-Registry **wire** interop, the 5-byte magic prefix, still works), MirrorMaker 2, Confluent
+  Control Center, and Cruise Control.
 - **🔴 Transaction-admin RPCs** (`WriteTxnMarkers`(27) / `DescribeProducers`(61) /
   `DescribeTransactions`(65) / `ListTransactions`(66)) are not-yet — no CLI `--abort` for a wedged
   transaction (bounded instead by the `transaction.timeout.ms` reaper). See

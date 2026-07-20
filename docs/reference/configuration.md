@@ -10,6 +10,11 @@ fields. This is the reference companion to the task-oriented
 > is compiled into the default server build (since v3.1, the `kafka` build tag was dropped) but the
 > listeners stay closed until you set `CONNECTORS_KAFKA_ENABLE=true`.
 
+> **Engine requirement (DE-57).** The Kafka connector runs **only on the `next` storage engine**.
+> Set `STORE_ENGINE=next` (or `store.engine: next`); on a fresh store the engine auto-selects `next`
+> when Kafka is enabled. Enabling Kafka on a legacy-engine cluster is refused at startup with a
+> configuration error.
+
 ## Field Table
 
 | Config field | Env var | Default | Meaning |

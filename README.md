@@ -34,7 +34,7 @@ Rust `rdkafka`).
 
 > **Mental model.** Kafka maps onto a **single** KubeMQ pattern (**Events Store**), so this repo
 > is organized by the Kafka **concept vocabulary** (`produce/`, `consume/`, `consumer-groups/`,
-> `admin/`, `offsets/`, `transactions/`, `security/`, `interop/`), not by KubeMQ's
+> `admin/`, `offsets/`, `transactions/`, `security/`), not by KubeMQ's
 > events/queues/commands patterns.
 >
 > - **Kafka topic `orders` ↔ internal KubeMQ Events-Store channel `kafka.orders`** (channel prefix =
@@ -74,7 +74,7 @@ rdkafka `.set("bootstrap.servers", ...)`).
 | [`docs/`](docs/README.md) | Architecture, getting-started, configuration, concepts, guides, reference (incl. `migration-from-kafka.md`) |
 | [`examples/`](examples/README.md) | 13 example variants × 7 languages (Go, Python, Java, JS/TS, C#, Ruby, Rust) = ~84-91 programs |
 | [`burnin/`](burnin/) | Standalone Go burn-in soak harness (franz-go transport; one worker per Kafka operation family incl. EOS) |
-| [`SHARED-CONVENTIONS.md`](SHARED-CONVENTIONS.md) | Single source of truth: directory naming, README templates, the `KUBEMQ_KAFKA_BOOTSTRAP` convention, the 14-variant table, the gotchas, exit-code rules |
+| [`SHARED-CONVENTIONS.md`](SHARED-CONVENTIONS.md) | Single source of truth: directory naming, README templates, the `KUBEMQ_KAFKA_BOOTSTRAP` convention, the 13-variant table, the gotchas, exit-code rules |
 | [`examples/SHARED-CONVENTIONS.md`](examples/SHARED-CONVENTIONS.md) | A verbatim copy of the root conventions, alongside the examples |
 | `LICENSE` | Apache-2.0 |
 
@@ -141,12 +141,14 @@ The connector speaks the real Apache Kafka wire protocol. Scope is stated honest
 > This is the **upstream-shared** KIP-890 ceiling — every pre-TV2 Kafka deployment has it — **not a
 > KubeMQ defect, and explicitly not counted as a soak/conformance failure.**
 
-**⛔ Non-goals / 🔴 Not-yet:**
+**✅ Supported on `next` / ⛔ Non-goals / 🔴 Not-yet:**
 
-> ⛔ Log compaction; Kafka Streams / Connect / Schema-Registry **service** / ksqlDB
-> (compaction-gated; Schema-Registry **wire** interop works); MirrorMaker 2; Confluent Control
-> Center / Cruise Control; GSSAPI/Kerberos. 🔴 KIP-848 next-gen groups; static membership;
-> OAUTHBEARER; delegation tokens; share groups; txn-admin RPCs (27/61/65/66).
+> ✅ Supported on `next` (the compaction-dependent ecosystem): log compaction
+> (`cleanup.policy=compact`, GA on `next`); Kafka Streams / Connect (rely on compacted internal
+> topics, which `next` provides); Schema-Registry **wire** interop (5-byte magic prefix); OAUTHBEARER
+> (SASL_SSL / OIDC only). ⛔ Genuine non-goals: Schema-Registry **service** / ksqlDB; MirrorMaker 2;
+> Confluent Control Center / Cruise Control; GSSAPI/Kerberos. 🔴 KIP-848 next-gen groups; static
+> membership; delegation tokens; share groups; txn-admin RPCs (27/61/65/66).
 
 There is **no docker-compose / boot-the-server quickstart** — a running connector is provided by
 the environment and reached via `KUBEMQ_KAFKA_BOOTSTRAP`.

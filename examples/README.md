@@ -109,11 +109,14 @@ example. Every EOS artifact cites the **KIP-890 V1 ceiling** (gotcha #9).
 - **TLS / mTLS on `:9093`** — documented, not a runnable variant. The stock dev broker ships no
   certs, so `security/sasl-plain-scram` runs SASL/PLAIN + SCRAM only and documents the TLS/mTLS
   path; see [`../docs/guides/security-sasl-tls.md`](../docs/guides/security-sasl-tls.md).
-- **Non-goals (⛔):** log compaction, Kafka Streams, Kafka Connect, a Schema Registry service,
-  ksqlDB, MirrorMaker 2 — see [`../docs/reference/capabilities.md`](../docs/reference/capabilities.md).
-- **Not-yet (🔴):** KIP-848 next-gen consumer groups, static membership, SASL/OAUTHBEARER,
-  delegation tokens, share groups (KIP-932), and the transactional-admin RPCs — tracked as future
-  work, not built here.
+- **Supported on `next` (✅):** log compaction (`cleanup.policy=compact`, GA on `next`), Kafka
+  Streams, Kafka Connect (they rely on the compacted internal topics `next` provides), Schema-Registry
+  **wire** interop, and SASL/OAUTHBEARER (SASL_SSL / OIDC only) — none ship a runnable variant here;
+  see [`../docs/reference/capabilities.md`](../docs/reference/capabilities.md).
+- **Non-goals (⛔):** a Schema Registry service, ksqlDB, MirrorMaker 2 — see
+  [`../docs/reference/capabilities.md`](../docs/reference/capabilities.md).
+- **Not-yet (🔴):** KIP-848 next-gen consumer groups, static membership, delegation tokens, share
+  groups (KIP-932), and the transactional-admin RPCs — tracked as future work, not built here.
 
 ---
 

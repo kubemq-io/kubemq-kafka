@@ -67,8 +67,9 @@ What repoints cleanly, what changes, and what does not exist. Full detail in
 | `CreatePartitions` / `IncrementalAlterConfigs` / `DeleteRecords` | 🟡 Partial | Increase-only / subset / low-end truncation. |
 | ACL management / Quota | 🟡 Partial | Enforcement Full; management empty-view. |
 | Transactions / EOS | 🟡 Partial (V1) | KIP-890 ceiling — never overstate. |
-| KIP-848 groups, static membership, OAUTHBEARER, delegation tokens, share groups, txn-admin RPCs | 🔴 Not-yet | Deferred. |
-| Log compaction, Kafka Streams / Connect / Schema-Registry service / ksqlDB, MirrorMaker 2, GSSAPI/Kerberos | ⛔ Never | Architectural non-goals (Schema-Registry **wire** interop still works). |
+| Log compaction (`cleanup.policy=compact`), Kafka Streams / Connect, Schema-Registry **wire** interop, OAUTHBEARER (SASL_SSL / OIDC only) | ✅ Supported on `next` | Compaction is GA on `next`; Streams/Connect rely on the compacted internal topics `next` provides. |
+| KIP-848 groups, static membership, delegation tokens, share groups, txn-admin RPCs | 🔴 Not-yet | Deferred. |
+| Schema-Registry service / ksqlDB, MirrorMaker 2, GSSAPI/Kerberos | ⛔ Never | Architectural non-goals (Schema-Registry **wire** interop still works). |
 
 ## Before You Migrate
 

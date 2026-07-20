@@ -25,8 +25,11 @@ username/password. The authenticated principal becomes the identity used for aut
 `security/sasl-plain-scram` example proves an authenticated produce/consume and that an unauthorized
 principal is denied with `TOPIC_AUTHORIZATION_FAILED` / `GROUP_AUTHORIZATION_FAILED`.
 
-> **GSSAPI/Kerberos SASL is ⛔ a non-goal**, and **OAUTHBEARER + delegation tokens are 🔴 not-yet**
-> (deferred). Use PLAIN or SCRAM. See [../reference/capabilities.md](../reference/capabilities.md).
+> **GSSAPI/Kerberos SASL is ⛔ a non-goal**; **OAUTHBEARER is ✅ SUPPORTED (SASL_SSL / OIDC only)** —
+> OIDC-federated, advertised and accepted on the TLS listener only, refused on plaintext with
+> `UNSUPPORTED_SASL_MECHANISM(33)`; **delegation tokens are 🔴 not-yet** (deferred). Use PLAIN or
+> SCRAM (plaintext or TLS), or OAUTHBEARER over SASL_SSL. See
+> [../reference/capabilities.md](../reference/capabilities.md).
 
 ## TLS & mTLS (doc-only)
 

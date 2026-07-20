@@ -9,12 +9,17 @@ no code changes, no library swap. The connector is compiled into the default ser
 v3.1, when the `kafka` Go build tag was dropped) but is **disabled by default**: it opens no
 listeners until `CONNECTORS_KAFKA_ENABLE=true`.
 
+> **Engine requirement (DE-57).** The Kafka connector runs **only on the `next` storage engine**
+> (`store.engine: next`). Enabling Kafka on a legacy-engine cluster is refused at startup with a
+> configuration error. On a fresh store the engine auto-selects `next`; pin explicitly with
+> `store.engine: next` / `STORE_ENGINE=next`.
+
 Unlike the CloudEvents / MQTT / AMQP connectors (which bridge across several KubeMQ patterns), the
 Kafka connector maps onto **exactly one** KubeMQ primitive: the **Events Store**. A Kafka topic
 `orders` is the KubeMQ Events-Store channel `kafka.orders`, and a Kafka offset is the STAN
 `Sequence` of a record on that channel. This single fact drives the mental model and the way this
 repo is organized (`produce/`, `consume/`, `consumer-groups/`, `admin/`, `offsets/`,
-`transactions/`, `security/`, `interop/` — the Kafka concept vocabulary, not the KubeMQ pattern
+`transactions/`, `security/` — the Kafka concept vocabulary, not the KubeMQ pattern
 vocabulary).
 
 ## Stack diagram
@@ -73,7 +78,7 @@ See [concepts/topics-partitions-offsets.md](concepts/topics-partitions-offsets.m
 > **Why this dictates repo organization:** Kafka maps onto a single KubeMQ pattern (Events Store),
 > so — exactly like `kubemq-aws` organizes by `sqs/sns/interop` rather than by KubeMQ patterns —
 > the examples and docs here are organized by the **Kafka concept vocabulary**
-> (`produce/ consume/ consumer-groups/ admin/ offsets/ transactions/ security/ interop/`).
+> (`produce/ consume/ consumer-groups/ admin/ offsets/ transactions/ security/`).
 
 ## Partitions & the increase-only model
 
@@ -111,10 +116,12 @@ wire protocol. See [concepts/interop-with-native.md](concepts/interop-with-nativ
 ## Honest scope
 
 The connector's ✅ Full / 🟡 Partial / ⛔ Non-goal / 🔴 Not-yet surface is stated exactly as the
-server docs state it — see [reference/capabilities.md](reference/capabilities.md). Notable
-architectural non-goals (⛔): log compaction, Kafka Streams / Connect / the Schema-Registry
-**service** / ksqlDB (all gated by compaction — Schema-Registry **wire** interop still works),
-MirrorMaker 2, and GSSAPI/Kerberos SASL.
+server docs state it — see [reference/capabilities.md](reference/capabilities.md). Because the Kafka
+connector runs **only on the `next` engine**, the compaction-dependent ecosystem is **supported**:
+log compaction (`cleanup.policy=compact`, GA on `next`), Kafka Streams, and Kafka Connect (they rely
+on compacted internal topics, which `next` provides), plus Schema-Registry **wire** interop (the
+5-byte magic-byte prefix). The genuine architectural non-goals (⛔) are the Schema-Registry
+**service** / ksqlDB, MirrorMaker 2, and GSSAPI/Kerberos SASL.
 
 ## Source code
 

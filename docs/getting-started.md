@@ -8,6 +8,11 @@ This repo assumes a **running KubeMQ server with the Kafka connector enabled**. 
 docker-compose and no boot-the-server step** here — point your Kafka client at an existing
 connector.
 
+> **Engine requirement (prerequisite).** The Kafka connector runs **only on the `next` storage
+> engine** (`store.engine: next`). Enabling Kafka on a legacy-engine cluster is refused at startup
+> with a configuration error. On a fresh store the engine auto-selects `next`; pin it explicitly
+> with `store.engine: next` / `STORE_ENGINE=next`.
+
 Two things are different from most KubeMQ connectors, and both are one-time setup gotchas:
 
 > **Gotcha #1 — the Kafka connector is DISABLED by default.** Unlike the AMQP and MQTT connectors
