@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tiny helper library shared by all 14 KubeMQ Kafka C# examples.
+    Centralizes the bootstrap override (KUBEMQ_KAFKA_BOOTSTRAP) and the
+    Producer/Consumer/AdminClient config factories, plus console-output +
+    assertion helpers.
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>KubeMQ.Kafka.Examples.Shared</RootNamespace>
+    <IsShared>true</IsShared>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
+  </ItemGroup>
+</Project>

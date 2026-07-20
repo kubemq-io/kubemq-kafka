@@ -1,0 +1,14 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# rdkafka (rdkafka-ruby) — Ruby binding over librdkafka (bundled/compiled at gem
+# install; needs a C toolchain). FLOOR pin as of 2026-07; bump + lock at impl via
+# /check-deps. The 0.16+ line is required for the transactional-producer API
+# (init_transactions / begin_transaction / commit_transaction / abort_transaction /
+# send_offsets_to_transaction) used by transactions/eos_commit_abort +
+# transactions/read_committed, and for create_partitions on the Admin client.
+gem "rdkafka", ">= 0.19"
+
+# Lint/format for the example scripts (compile-as-lint fallback is `ruby -c`).
+gem "rubocop", "~> 1.66", require: false

@@ -1,0 +1,25 @@
+[project]
+name = "kubemq-kafka-examples"
+version = "0.1.0"
+description = "KubeMQ Kafka connector examples in Python — native confluent-kafka (librdkafka) against the connector via bootstrap.servers"
+readme = "README.md"
+# confluent-kafka wheels ship for CPython 3.9+; floor follows the Kafka client.
+requires-python = ">=3.9"
+dependencies = [
+    # Native Kafka client (librdkafka). The only runtime dependency the examples
+    # need. FLOOR — bump+lock at impl via /check-deps; exact pin in uv.lock.
+    "confluent-kafka>=2.5.3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+# Keep the lint surface focused on real correctness signals (pyflakes + import order).
+select = ["E", "F", "I", "W"]

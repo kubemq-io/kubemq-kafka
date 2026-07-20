@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.kubemq.examples</groupId>
+    <artifactId>kubemq-kafka-examples</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>KubeMQ Kafka Examples</name>
+    <description>KubeMQ Kafka connector examples in Java (native org.apache.kafka:kafka-clients + AdminClient)</description>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Native Apache Kafka Java client (Producer/Consumer/Admin). MINIMUM floor
+             as of 2026-07; bump+lock at implementation via /check-deps. -->
+        <kafka.clients.version>3.9.0</kafka.clients.version>
+        <slf4j.version>2.0.16</slf4j.version>
+    </properties>
+
+    <dependencies>
+        <!-- Apache Kafka client: KafkaProducer, KafkaConsumer, Admin/AdminClient. -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.clients.version}</version>
+        </dependency>
+
+        <!-- SLF4J binding so kafka-clients logs are readable (else "NOP" warning to stderr). -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Optional codecs for compression variant (produce/compression-and-keys):
+             gzip is built into the JDK; snappy/lz4/zstd need these on the classpath.
+             kafka-clients declares them as OPTIONAL, so we add them explicitly. -->
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.10.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lz4</groupId>
+            <artifactId>lz4-java</artifactId>
+            <version>1.8.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+            <version>1.5.6-8</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <!--
+                  Run each example in a FORKED JVM (exec:exec), not in-process
+                  (exec:java): a forked JVM gets the complete runtime classpath and
+                  returns the REAL process exit code, so a failed Check assertion or an
+                  unexpected KafkaException reliably fails the run (exit non-zero).
+                  Mirrors kubemq-aws/examples/java/pom.xml.
+                -->
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>${exec.mainClass}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

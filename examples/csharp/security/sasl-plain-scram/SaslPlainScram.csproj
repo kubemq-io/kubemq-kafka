@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>sasl-plain-scram</AssemblyName>
+    <RootNamespace>KubeMQ.Kafka.Examples.Security.SaslPlainScram</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
+    <ProjectReference Include="../../shared/Shared.csproj" />
+  </ItemGroup>
+</Project>

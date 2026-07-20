@@ -1,0 +1,15 @@
+[package]
+name = "sasl-plain-scram"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "sasl-plain-scram"
+path = "main.rs"
+
+[dependencies]
+kafka-common.workspace = true
+rdkafka.workspace = true
+tokio.workspace = true

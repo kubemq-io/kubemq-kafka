@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>list-and-retention</AssemblyName>
+    <RootNamespace>KubeMQ.Kafka.Examples.Offsets.ListAndRetention</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
+    <ProjectReference Include="../../shared/Shared.csproj" />
+  </ItemGroup>
+</Project>

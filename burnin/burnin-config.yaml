@@ -1,0 +1,77 @@
+# KubeMQ Kafka burn-in harness configuration (§7.5).
+# Broker var override: KUBEMQ_BROKER_ADDRESS (default localhost:9092, the Kafka wire
+# listener; NOT KUBEMQ_KAFKA_BOOTSTRAP, which is the examples var).
+# Topic naming: burnin.<worker>.<idx:04d>  ->  Events-Store channel kafka.burnin.<worker>.<idx:04d>
+# CONNECTOR IS DISABLED BY DEFAULT — run the server with CONNECTORS_KAFKA_ENABLE=true (gotcha #1).
+version: "2"
+
+broker:
+  address: "localhost:9092"          # Kafka wire listener; overridden by KUBEMQ_BROKER_ADDRESS
+  client_id_prefix: "burnin-kafka"
+
+mode: "soak"
+duration: "1h"
+run_id: ""
+warmup_duration: ""
+
+kafka:
+  acks: "all"                        # all|1|0 -> kgo.RequiredAcks (acks>=1 on multi-node, gotcha #3)
+  compression: "lz4"                 # none|gzip|snappy|lz4|zstd
+  partitions: 3                      # topic partition count (1-256 hard cap)
+  replication_factor: 1              # single-node connector
+  isolation_level: "read_committed"  # read_committed hides aborted txns (gotcha #12)
+  idempotent: true                   # enable.idempotence (exactly-once within a producer)
+  transactional: true                # EOS worker on
+  group_prefix: "burnin-kafka-grp"
+  topic_prefix: "burnin"
+  fetch_max_wait_ms: 500
+  txn_timeout_ms: 60000              # transaction.timeout.ms (EOS worker)
+  sasl_mechanism: ""                 # ""|PLAIN|SCRAM-SHA-256|SCRAM-SHA-512 (doc-only default)
+  sasl_username: ""
+  sasl_password: ""
+  tls: false                         # SSL against :9093 (doc-only default)
+
+# Six Kafka workers (§7.3). All ON by default (Kafka's core surface, unlike aws's opt-in set).
+workers:
+  produce_round_trip: { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 2, rate: 100 }
+  keyed_ordering:     { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 1, rate: 50 }
+  consumer_group:     { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 3, rate: 50 }
+  offset_commit_lag:  { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 1, rate: 50 }
+  admin_topic_churn:  { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 1, rate: 10 }
+  transactions_eos:   { enabled: true, channels: 1, producers_per_channel: 1, consumers_per_channel: 1, rate: 30 }
+
+message:
+  size_mode: "fixed"
+  size_bytes: 1024
+  size_distribution: "256:80,4096:15,65536:5"
+  reorder_window: 10000
+
+metrics:
+  port: 8898                         # FIXED collision-free port (§7.5): mqtt/amqp/stomp=8896, ce=8895, aws=8897, gcp=8899
+  report_interval: "30s"
+
+logging: { format: "text", level: "info" }
+forced_disconnect: { interval: "0", duration: "5s" }   # "0" disables; e.g. "60s" injects franz-go client-recreate churn
+recovery: { reconnect_interval: "1s", reconnect_max_interval: "30s", reconnect_multiplier: 2.0 }
+shutdown: { drain_timeout_seconds: 10 }
+output: { report_file: "", sdk_version: "" }
+
+thresholds:
+  max_loss_pct: 0.0
+  max_duplication_pct: 0.0
+  max_offset_order_violations: 0
+  max_group_loss_across_rebalance: 0
+  max_eos_violations: 0             # KIP-890 V1 same-epoch residual EXCLUDED (upstream-shared, §2.5)
+  max_lag_accuracy_error_msgs: 1
+  max_p50_latency_ms: 2000
+  max_p95_latency_ms: 5000
+  max_p99_latency_ms: 8000
+  max_p999_latency_ms: 15000
+  min_throughput_pct: 80
+  max_error_rate_pct: 1.0
+  max_memory_growth_factor: 2.0
+  max_downtime_pct: 10
+  max_duration: "168h"
+
+warmup: { max_parallel_channels: 10, timeout_per_channel_ms: 5000 }
+cors: { origins: "*" }

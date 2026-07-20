@@ -1,0 +1,51 @@
+[workspace]
+resolver = "2"
+# One member crate per variant (mirrors the 14-variant master table in ../SHARED-CONVENTIONS.md),
+# plus the `kafka-common` shared client/config helper reused by every variant.
+# `common` is declared FIRST (spec §6.1).
+members = [
+    "common",
+    "produce/basic-acks",
+    "produce/idempotent",
+    "produce/compression-and-keys",
+    "consume/from-beginning-latest",
+    "consume/seek-offsets-timestamps",
+    "consumer-groups/join-rebalance",
+    "consumer-groups/commit-and-lag",
+    "admin/topics-lifecycle",
+    "admin/partitions-and-configs",
+    "offsets/list-and-retention",
+    "transactions/eos-commit-abort",
+    "transactions/read-committed",
+    "security/sasl-plain-scram",
+]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"          # matches the repo LICENSE (spec §3); aws used Apache-2.0 for its tree
+publish = false
+
+# Pinned floors; bump+lock at impl via /check-deps (verify a clean `cargo build --workspace`).
+[workspace.dependencies]
+# Shared local helper crate (bootstrap.servers + optional SASL from env).
+kafka-common = { path = "common" }
+
+# librdkafka Rust binding on the tokio runtime.
+#  - `cmake-build`   : build the bundled librdkafka from source (self-contained; no system lib needed).
+#  - `tokio`         : enables FutureProducer / StreamConsumer async surface used by every variant.
+#  - `ssl-vendored`  : links a vendored OpenSSL — REQUIRED for SASL/SCRAM (HMAC) in security/sasl-plain-scram
+#                      and for security.protocol=SSL. ⚠ verify at impl: feature name is `ssl-vendored`
+#                      (vendored) vs `ssl` (system OpenSSL); pick per CI image.
+#  - `zstd`          : zstd compression codec for produce/compression-and-keys (gzip/snappy/lz4 are bundled).
+# ⚠ verify at impl: exact rdkafka version (0.36 / 0.37 line) and that this feature set resolves on the
+# build image. FutureProducer requires the `tokio` feature; without it the async examples won't compile.
+rdkafka = { version = "0.37", default-features = false, features = [
+    "cmake-build",
+    "tokio",
+    "ssl-vendored",
+    "zstd",
+    "libz",
+] }
+
+tokio = { version = "1.47", features = ["macros", "rt-multi-thread", "time", "sync"] }

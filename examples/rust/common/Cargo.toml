@@ -1,0 +1,13 @@
+[package]
+name = "kafka-common"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "kafka_common"
+path = "lib.rs"
+
+[dependencies]
+rdkafka.workspace = true

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>commit-and-lag</AssemblyName>
+    <RootNamespace>KubeMQ.Kafka.Examples.ConsumerGroups.CommitAndLag</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" />
+    <ProjectReference Include="../../shared/Shared.csproj" />
+  </ItemGroup>
+</Project>

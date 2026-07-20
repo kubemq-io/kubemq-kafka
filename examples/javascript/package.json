@@ -1,0 +1,20 @@
+{
+  "name": "kubemq-kafka-examples-js",
+  "version": "1.0.0",
+  "description": "KubeMQ Kafka wire-protocol connector examples in TypeScript using kafkajs (DefaultPartitioner = murmur2)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "run-example": "npx tsx"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  }
+}

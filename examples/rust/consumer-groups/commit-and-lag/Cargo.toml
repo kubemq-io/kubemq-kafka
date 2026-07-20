@@ -1,0 +1,15 @@
+[package]
+name = "commit-and-lag"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "commit-and-lag"
+path = "main.rs"
+
+[dependencies]
+kafka-common.workspace = true
+rdkafka.workspace = true
+tokio.workspace = true

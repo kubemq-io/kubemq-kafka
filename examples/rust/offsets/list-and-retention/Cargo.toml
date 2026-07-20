@@ -1,0 +1,15 @@
+[package]
+name = "list-and-retention"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "list-and-retention"
+path = "main.rs"
+
+[dependencies]
+kafka-common.workspace = true
+rdkafka.workspace = true
+tokio.workspace = true

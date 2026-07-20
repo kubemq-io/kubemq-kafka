@@ -1,0 +1,17 @@
+<Project>
+  <!--
+    Central Package Management for the KubeMQ Kafka C# examples.
+    Every variant .csproj references these packages WITHOUT an inline Version.
+
+      Confluent.Kafka — the native .NET Kafka client (librdkafka under the hood;
+        CRC32 default partitioner — see gotcha #4). Examples point BootstrapServers
+        at the KubeMQ Kafka connector (KUBEMQ_KAFKA_BOOTSTRAP). Confluent.Kafka
+        speaks the real Kafka wire protocol — no library swap.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Confluent.Kafka" Version="2.6.0" />
+  </ItemGroup>
+</Project>
