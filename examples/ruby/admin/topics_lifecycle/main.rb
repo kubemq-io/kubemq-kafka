@@ -33,9 +33,9 @@ consumer = KafkaClient.consumer("kafka-ex-admin-life-#{Process.pid}")
   puts "Describe(p#{p})   -> low=#{low} high=#{high}"
 end
 consumer.close
-# ⚠ verify at impl: rdkafka-ruby's DescribeConfigs surface (admin.describe_configs)
-# varies by gem line. Where it is absent, this metadata/watermark probe is the
-# portable "topic exists + partition count" check; see README for the note.
+# Note: admin.describe_configs IS present on rdkafka 0.29.0, but the connector's
+# single-topic metadata is synthetic, so this watermark probe is the portable and
+# reliable "topic exists + partition count" describe used here; see README.
 
 # DeleteTopics.
 admin.delete_topic(TOPIC).wait(max_wait_timeout: 15)
@@ -48,9 +48,8 @@ begin
   admin.create_topic(bad, 1, 1).wait(max_wait_timeout: 15)
   fail!("topic name with '~' was NOT rejected: #{bad}")
 rescue Rdkafka::RdkafkaError => e
-  # ⚠ verify at impl: exact symbol for INVALID_TOPIC_EXCEPTION(17) on the pinned
-  # gem (commonly :invalid_topic / :topic_exception). Assert it is a validation
-  # rejection, not a transport error.
+  # Verified: e.code == :topic_exception (INVALID_TOPIC_EXCEPTION, Kafka code 17)
+  # on rdkafka 0.29.0 / librdkafka 2.14.2 — a validation rejection, not transport.
   puts "CreateTopic(~) -> rejected: #{e.code} (INVALID_TOPIC_EXCEPTION) as expected"
 end
 

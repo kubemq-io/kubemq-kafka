@@ -49,7 +49,7 @@ end
 
 sasl = {
   "security.protocol" => "sasl_plaintext",
-  "sasl.mechanism" => mechanism, # ⚠ verify: some gem lines use "sasl.mechanisms" (plural)
+  "sasl.mechanism" => mechanism, # verified: librdkafka accepts "sasl.mechanism" and the "sasl.mechanisms" alias
   "sasl.username" => username,
   "sasl.password" => password
 }

@@ -88,9 +88,14 @@ public final class Main {
         Thread b = new Thread(() -> consumeLoop("B", group, run, collected, assignedB, running), "consumer-B");
         b.start();
 
-        // Wait until every produced value is collected, or a hard deadline.
-        long deadline = System.currentTimeMillis() + 40_000;
-        while (collected.size() < M && System.currentTimeMillis() < deadline) {
+        // Wait until every produced value is collected AND the rebalance has actually
+        // spread work across BOTH members. A single fast consumer can drain all M
+        // records during its solo window (before B joins), so stopping at "collected==M"
+        // alone would exit before B is ever assigned a partition and the rebalance
+        // assertion would spuriously fail. Require both members to hold a partition too.
+        long deadline = System.currentTimeMillis() + 30_000;
+        while ((collected.size() < M || assignedA.isEmpty() || assignedB.isEmpty())
+                && System.currentTimeMillis() < deadline) {
             Thread.sleep(250);
         }
         running.set(false);

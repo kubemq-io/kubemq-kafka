@@ -84,6 +84,16 @@ public final class KafkaClients {
         return prefix + "-" + UUID.randomUUID();
     }
 
+    /**
+     * A fresh unique topic name so reruns start from a clean log. DeleteTopics on the
+     * connector does NOT purge the underlying channel data, so a re-created same-name
+     * topic inherits old records/offsets — any offset- or count-based assertion must run
+     * against a UNIQUE topic each time to be reliably re-runnable.
+     */
+    public static String freshTopic(String prefix) {
+        return prefix + "-" + UUID.randomUUID();
+    }
+
     /** AdminClient for topic/partition/config operations. */
     public static Admin admin() {
         Properties p = new Properties();

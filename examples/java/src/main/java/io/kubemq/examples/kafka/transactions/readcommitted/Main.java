@@ -49,7 +49,7 @@ import org.apache.kafka.common.errors.TopicExistsException;
  */
 public final class Main {
 
-    private static final String TOPIC = "kafka-ex-txn-readcommitted-java";
+    private static final String TOPIC_PREFIX = "kafka-ex-txn-readcommitted-java";
     private static final String TXN_ID = "kafka-ex.txn-readcommitted.java";
     private static final int BASELINE = 3;
     private static final int UNCOMMITTED = 4;
@@ -59,15 +59,19 @@ public final class Main {
 
     public static void main(String[] args) throws Exception {
         System.out.println("bootstrap.servers = " + KafkaClients.bootstrap());
-        TopicPartition tp = new TopicPartition(TOPIC, 0);
+        // Fresh topic each run: read_committed reads are poisoned by ANY aborted
+        // transaction already present in the partition (this example aborts at the end),
+        // so a reused topic would make a rerun's read_committed consumer see nothing.
+        String topic = KafkaClients.freshTopic(TOPIC_PREFIX);
+        TopicPartition tp = new TopicPartition(topic, 0);
 
         try (Admin admin = KafkaClients.admin()) {
             try {
-                admin.createTopics(List.of(new NewTopic(TOPIC, 1, (short) 1))).all().get();
-                System.out.println("CreateTopics '" + TOPIC + "' (1 partition)");
+                admin.createTopics(List.of(new NewTopic(topic, 1, (short) 1))).all().get();
+                System.out.println("CreateTopics '" + topic + "' (1 partition)");
             } catch (Exception e) {
                 if (e.getCause() instanceof TopicExistsException) {
-                    System.out.println("Topic '" + TOPIC + "' already exists — reusing");
+                    System.out.println("Topic '" + topic + "' already exists — reusing");
                 } else {
                     throw e;
                 }
@@ -90,21 +94,27 @@ public final class Main {
                 for (int i = 0; i < BASELINE; i++) {
                     String v = "committed-" + run + "-" + i;
                     committedValues.add(v);
-                    producer.send(new ProducerRecord<>(TOPIC, "k", v));
+                    producer.send(new ProducerRecord<>(topic, "k", v));
                 }
                 producer.commitTransaction();
                 System.out.println("Committed baseline of " + BASELINE + " records");
 
-                long earliest = admin.listOffsets(Map.of(tp, OffsetSpec.earliest()))
+                // Capture the true read_committed LSO right after the baseline commit.
+                // This is the stable offset once every txn is closed: it sits ABOVE the
+                // B data records because a committed transaction also writes a COMMIT
+                // control record that consumes one offset. Capturing it (rather than
+                // computing earliest + BASELINE) keeps the assertion correct without
+                // hard-coding how many control-record offsets the connector emits.
+                long lsoBaseline = admin.listOffsets(Map.of(tp, OffsetSpec.latest()),
+                                new ListOffsetsOptions(IsolationLevel.READ_COMMITTED))
                         .all().get().get(tp).offset();
-                long expectedLso = earliest + BASELINE;
 
                 // ---- Open a second txn, flush but DO NOT commit. ----
                 producer.beginTransaction();
                 for (int i = 0; i < UNCOMMITTED; i++) {
                     String v = "uncommitted-" + run + "-" + i;
                     uncommittedValues.add(v);
-                    producer.send(new ProducerRecord<>(TOPIC, "k", v));
+                    producer.send(new ProducerRecord<>(topic, "k", v));
                 }
                 producer.flush(); // records reach the log; txn still open
                 System.out.println("Opened a txn with " + UNCOMMITTED + " uncommitted (flushed) records");
@@ -116,17 +126,18 @@ public final class Main {
                 long lso = admin.listOffsets(Map.of(tp, OffsetSpec.latest()),
                                 new ListOffsetsOptions(IsolationLevel.READ_COMMITTED))
                         .all().get().get(tp).offset();
-                System.out.println("HWM(read_uncommitted)=" + hwm + " LSO(read_committed)=" + lso);
+                System.out.println("HWM(read_uncommitted)=" + hwm + " LSO(read_committed)=" + lso
+                        + " (baseline LSO=" + lsoBaseline + ")");
                 Check.that(lso < hwm, "LSO sits below HWM while the transaction is open");
-                Check.equal(expectedLso, lso, "LSO equals the first offset of the open txn");
-                Check.equal(earliest + BASELINE + UNCOMMITTED, hwm, "HWM includes the uncommitted records");
+                Check.equal(lsoBaseline, lso, "LSO stays frozen at the open txn's first offset");
+                Check.equal(lsoBaseline + UNCOMMITTED, hwm, "HWM includes the uncommitted records");
 
                 // ---- read_committed consumer sees only the committed baseline. ----
                 Properties cp = KafkaClients.consumerProps(KafkaClients.freshGroup("txn-readcommitted"));
                 cp.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
                 Set<String> seen = new HashSet<>();
                 try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(cp)) {
-                    consumer.subscribe(List.of(TOPIC));
+                    consumer.subscribe(List.of(topic));
                     long deadline = System.currentTimeMillis() + 12_000;
                     while (System.currentTimeMillis() < deadline) {
                         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));

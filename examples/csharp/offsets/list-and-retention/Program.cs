@@ -12,7 +12,12 @@ using KubeMQ.Kafka.Examples.Shared;
 
 return await Demo.RunAsync(async () =>
 {
-    const string topic = "kafka-ex-offsets-list-and-retention";
+    // Per-run-unique topic (§4.2, matching the other languages): DeleteTopics does
+    // NOT purge the connector channel — a re-created same-name topic keeps advancing
+    // the offset sequence, so the log-start (earliest) moves past 0 and the
+    // high-watermark past `count` on a rerun. This example asserts ABSOLUTE
+    // watermarks (low==0, high==count), so it needs a fresh Guid channel each run.
+    var topic = $"kafka-ex-offsets-list-and-retention-{Guid.NewGuid():N}";
     const int count = 8;
     var tp = new TopicPartition(topic, 0);
     using var admin = new AdminClientBuilder(KafkaClients.AdminConfig()).Build();

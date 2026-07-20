@@ -14,7 +14,13 @@ using KubeMQ.Kafka.Examples.Shared;
 
 return await Demo.RunAsync(async () =>
 {
-    const string topic = "kafka-ex-consume-seek-offsets-timestamps";
+    // Per-run-unique topic (§4.2, matching the other languages): DeleteTopics does
+    // NOT purge the connector channel — a re-created same-name topic keeps advancing
+    // the offset sequence, so the log-start moves past 0 on a rerun. This example
+    // Seeks to ABSOLUTE offsets, which would fall below the advanced log-start and
+    // reset out-of-range on a second run against a fixed name. A fresh Guid channel
+    // always starts at offset 0.
+    var topic = $"kafka-ex-consume-seek-offsets-timestamps-{Guid.NewGuid():N}";
     const int count = 6;
     var tp = new TopicPartition(topic, 0);
 

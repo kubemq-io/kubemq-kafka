@@ -45,12 +45,11 @@ admin = KafkaClient.admin
 
 # Start with 2 partitions.
 admin.create_topic(TOPIC, 2, 1).wait(max_wait_timeout: 15)
-probe = KafkaClient.consumer("kafka-ex-admin-parts-#{Process.pid}")
-puts "CreateTopic    -> #{TOPIC} partitions=#{partition_count(probe, TOPIC)}"
+puts "CreateTopic    -> #{TOPIC} partitions=#{partition_count(TOPIC)}"
 
 # --- CreatePartitions: increase 2 -> 4 (allowed). ---
 admin.create_partitions(TOPIC, 4).wait(max_wait_timeout: 15)
-now = partition_count(probe, TOPIC)
+now = partition_count(TOPIC)
 puts "CreatePartitions(4) -> now partitions=#{now}"
 fail!("partition increase to 4 did not take effect (saw #{now})") unless now == 4
 
@@ -59,7 +58,7 @@ begin
   admin.create_partitions(TOPIC, 4).wait(max_wait_timeout: 15)
   fail!("non-increasing CreatePartitions(4->4) was NOT rejected")
 rescue Rdkafka::RdkafkaError => e
-  # ⚠ verify at impl: symbol is commonly :invalid_partitions on the pinned gem.
+  # Verified: e.code == :invalid_partitions on rdkafka 0.29.0 / librdkafka 2.14.2.
   puts "CreatePartitions(4->4) -> rejected: #{e.code} (INVALID_PARTITIONS) as expected"
 end
 
@@ -87,7 +86,6 @@ else
   puts "DeleteRecords 🟡 -> N/A on pinned rdkafka-ruby; see ../../../go/admin/partitions-and-configs"
 end
 
-probe.close
 admin.delete_topic(TOPIC).wait(max_wait_timeout: 15)
 admin.close
 puts "DeleteTopic    -> ok"
